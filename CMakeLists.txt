@@ -40,7 +40,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Definition of the target interface NeonDeveloperLib
-add_library(NeonDeveloperLib INTERFACE)
+add_library(NeonDeveloperLib INTERFACE optimization/fusion/map/src/map.cpp optimization/fusion/map/include/map.h optimization/fusion/map/src/map_container.cu)
 target_compile_features(NeonDeveloperLib INTERFACE cxx_std_17)
 
 include("${PROJECT_SOURCE_DIR}/cmake/ManageCompilationFlags.cmake")
@@ -80,6 +80,7 @@ add_subdirectory("libNeonDomain")
 add_subdirectory("libNeonSkeleton")
 add_subdirectory("libNeonSolver")
 add_subdirectory("apps")
+add_subdirectory("optimization")
 
 
 #-------------------------------------------------------------------#
