@@ -17,6 +17,7 @@
 #include "Neon/skeleton/Skeleton.h"
 #include "gtest/gtest.h"
 
+#include "function_calls.cpp"
 #include "map.h"
 
 
@@ -27,36 +28,122 @@
 using namespace Neon::set;
 using namespace Neon::domain;
 
-std::vector<int>             DEVICES;            // GPU device IDs
-int                          DOMAIN_SIZE = 256;  // Number of voxels along each axis
-size_t                       MAX_ITER = 10;      // Maximum iterations for the solver
-double                       TOL = 1e-10;        // Absolute tolerance for use in converge check
-int                          CARDINALITY = 1;
-std::string                  GRID_TYPE = "dGrid";
-std::string                  DATA_TYPE = "double";
-std::string                  REPORT_FILENAME = "fusion_map_report";
-int                          WARMUP = 0;
-int                          TIMES = 1;
-int                          NUM_BLOCKS = 1;
-int                          FUSION_FACTOR = 1;
-int                          EVAL_SCALABILITY = 0;
-Neon::skeleton::Occ occE = Neon::skeleton::Occ::none;
+std::vector<int>        DEVICES;            // GPU device IDs
+int                     DOMAIN_SIZE = 256;  // Number of voxels along each axis
+size_t                  MAX_ITER = 10;      // Maximum iterations for the solver
+double                  TOL = 1e-10;        // Absolute tolerance for use in converge check
+int                     CARDINALITY = 1;
+std::string             GRID_TYPE = "dGrid";
+std::string             DATA_TYPE = "double";
+std::string             REPORT_FILENAME = "fusion_map_report";
+int                     WARMUP = 0;
+int                     TIMES = 1;
+int                     NUM_BLOCKS = 1;
+int                     FUSION_FACTOR = 1;
+int                     EVAL_SCALABILITY = 0;
+int                     RUN_BASELINE = 1;
+Neon::skeleton::Occ     occE = Neon::skeleton::Occ::none;
 Neon::set::TransferMode transferE = Neon::set::TransferMode::get;
-int                          ARGC;
-char**                       ARGV;
+int                     ARGC;
+char**                  ARGV;
 
 
 template <typename T>
-std::vector<double> mapFusionPerfTest(bool generate_report=true, int fusion_factor=1, int flop_cnt=1, int mem_access_cnt=1)
+std::vector<Neon::set::Container> make_fused_container(Neon::domain::dGrid::Field<T, 0> field_fused, T other_vals[], const int fusion_factor, const int flop_cnt, const int mem_access_cnt, const int NUM_BLOCKS)
+{
+    std::vector<Neon::set::Container> container_fused;
+    for (int block = 0; block < NUM_BLOCKS; block++) {
+        if (fusion_factor == 1 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 1, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 1 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 1, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 1 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 1, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 1 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 1, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 2 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 2, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 2 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 2, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 2 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 2, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 2 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 2, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 4 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 4, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 4 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 4, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 4 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 4, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 4 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 4, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 8 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 8, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 8 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 8, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 8 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 8, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 8 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 8, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 16 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 16, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 16 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 16, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 16 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 16, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 16 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 16, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 32 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 32, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 32 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 32, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 32 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 32, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 32 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 32, 8, 1>(field_fused, other_vals));
+        else if (fusion_factor == 64 && flop_cnt == 1 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 64, 1, 1>(field_fused, other_vals));
+        else if (fusion_factor == 64 && flop_cnt == 2 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 64, 2, 1>(field_fused, other_vals));
+        else if (fusion_factor == 64 && flop_cnt == 4 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 64, 4, 1>(field_fused, other_vals));
+        else if (fusion_factor == 64 && flop_cnt == 8 && mem_access_cnt == 1)
+            container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 64, 8, 1>(field_fused, other_vals));
+    }
+    return container_fused;
+}
+
+template <typename T>
+std::vector<Neon::set::Container> make_baseline_container(Neon::domain::dGrid::Field<T, 0> field_baseline, T other_vals[], const int flop_cnt, const int mem_access_cnt, const int NUM_BLOCKS)
+{
+    std::vector<Neon::set::Container> container_baseline;
+    for (int block = 0; block < NUM_BLOCKS; block++) {
+        if (flop_cnt == 1 && mem_access_cnt == 1)
+            container_baseline.push_back(mapContainer<Neon::domain::dGrid::Field<T, 0>, T, 1, 1>(field_baseline, other_vals));
+        else if (flop_cnt == 2 && mem_access_cnt == 1)
+            container_baseline.push_back(mapContainer<Neon::domain::dGrid::Field<T, 0>, T, 2, 1>(field_baseline, other_vals));
+        else if (flop_cnt == 4 && mem_access_cnt == 1)
+            container_baseline.push_back(mapContainer<Neon::domain::dGrid::Field<T, 0>, T, 4, 1>(field_baseline, other_vals));
+        else if (flop_cnt == 8 && mem_access_cnt == 1)
+            container_baseline.push_back(mapContainer<Neon::domain::dGrid::Field<T, 0>, T, 8, 1>(field_baseline, other_vals));
+    }
+    return container_baseline;
+}
+
+
+template <typename T>
+std::vector<double> mapFusionPerfTest(bool generate_report = true, std::vector<int> devices = {0}, int domain_size = 1, int fusion_factor = 1, int flop_cnt = 1, int mem_access_cnt = 1, int max_num_blocks = 1, bool test_baseline = true)
 {
     assert(GRID_TYPE == "dGrid" || GRID_TYPE == "eGrid" || GRID_TYPE == "bGrid");
     assert(DATA_TYPE == "double" || DATA_TYPE == "single");
 
+    int num_blocks = max_num_blocks / fusion_factor / MAX(flop_cnt, mem_access_cnt);
 
-    if (DEVICES.empty()) {
-        DEVICES.push_back(0);
+
+    if (devices.empty()) {
+        devices.push_back(0);
     }
-    DevSet        deviceSet(Neon::DeviceType::CUDA, DEVICES);
+    DevSet        deviceSet(Neon::DeviceType::CUDA, devices);
     Neon::Backend backend(deviceSet, Neon::Runtime::stream);
     backend.setAvailableStreamSet(2);
 
@@ -76,7 +163,7 @@ std::vector<double> mapFusionPerfTest(bool generate_report=true, int fusion_fact
             {0, 1, 0}};
     }());
 
-    Neon::index_3d dom(DOMAIN_SIZE, DOMAIN_SIZE, DOMAIN_SIZE);
+    Neon::index_3d dom(domain_size, domain_size, domain_size);
 
     using Grid = Neon::domain::dGrid;
     Grid grid(
@@ -89,8 +176,8 @@ std::vector<double> mapFusionPerfTest(bool generate_report=true, int fusion_fact
 
 
     auto field_baseline = grid.newField<T>("field_baseline",
-                                          1,
-                                          -100);
+                                           1,
+                                           -100);
     auto field_fused = grid.newField<T>("field_fused",
                                         1,
                                         -100);
@@ -106,70 +193,60 @@ std::vector<double> mapFusionPerfTest(bool generate_report=true, int fusion_fact
     Neon::skeleton::Skeleton skeleton_baseline(backend), skeleton_fused(backend);
 
     int32_t time = 0;
-    T other_vals[MEM_ACCESS_CNT];
-    for(int i = 0; i < MEM_ACCESS_CNT; i++)
-    {
+    T       other_vals[MEM_ACCESS_CNT];
+    for (int i = 0; i < MEM_ACCESS_CNT; i++) {
         other_vals[i] = i + 1;
     }
 
-    std::vector<Neon::set::Container> container_baseline = make_baseline_container<T>(field_baseline, other_vals, flop_cnt, mem_access_cnt, NUM_BLOCKS);
-    std::vector<Neon::set::Container> container_fused = make_fused_container<T>(field_fused, other_vals, fusion_factor, flop_cnt, mem_access_cnt, NUM_BLOCKS);
-    // for(int block = 0; block < NUM_BLOCKS; block++)
-    // {
-    //     if(FUSION_FACTOR == 1)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 1, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 2)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T,  2, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 4)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 4, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 8)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T,  8, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 16)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T,  16, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 32)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T,  32, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
-    //     else if(FUSION_FACTOR == 64)
-    //         container_fused.push_back(mapContainerFused<Neon::domain::dGrid::Field<T, 0>, T, 64, FLOP_CNT, MEM_ACCESS_CNT>(field_fused, other_vals));
+    std::vector<Neon::set::Container> container_baseline = make_baseline_container<T>(field_baseline, other_vals, flop_cnt, mem_access_cnt, num_blocks * fusion_factor);
+    std::vector<Neon::set::Container> container_fused = make_fused_container<T>(field_fused, other_vals, fusion_factor, flop_cnt, mem_access_cnt, num_blocks);
 
-    //     for(int map_op = 0; map_op < FUSION_FACTOR; map_op++)
-    //     {
-    //         container_baseline.push_back(mapContainer<Neon::domain::dGrid::Field<T, 0>, T, FLOP_CNT, MEM_ACCESS_CNT>(field_baseline, other_vals));
-    //     }
-    // }
     skeleton_baseline.sequence(container_baseline, "map_baseline");
     skeleton_fused.sequence(container_fused, "map_fused");
-    skeleton_baseline.ioToDot("map_fusion_baseline");
-    skeleton_fused.ioToDot("map_fusion_fused");
+    skeleton_baseline.ioToDot("graphs/map_fusion_baseline_GPUCount:" + std::to_string(devices.size()) +
+                              "_MemoryAccessCount:" + std::to_string(mem_access_cnt) +
+                              "_FlopCount:" + std::to_string(flop_cnt) +
+                              "_FusionFactor:" + std::to_string(fusion_factor) +
+                              "_DomainSize:" + std::to_string(domain_size));
+    skeleton_fused.ioToDot("graphs/map_fusion_fused_GPUCount:" + std::to_string(devices.size()) +
+                           "_MemoryAccessCount:" + std::to_string(mem_access_cnt) +
+                           "_FlopCount:" + std::to_string(flop_cnt) +
+                           "_FusionFactor:" + std::to_string(fusion_factor) +
+                           "_DomainSize:" + std::to_string(domain_size));
+
+    std::cout << "TEST_BASELINE" << test_baseline << std::endl;
+    
 
     for (time = 0; time < TIMES + WARMUP; ++time) {
-        if(time == WARMUP)
-        {
+        if (time == WARMUP) {
             timer_computation_baseline.start();
         }
-        skeleton_baseline.run();
-        field_baseline.updateIO(0);
+        if (test_baseline) {
+            skeleton_baseline.run();
+        }
     }
     timer_computation_baseline.stop();
+    if (test_baseline) {
+        field_baseline.updateIO(0);
+    }
 
 
     for (time = 0; time < TIMES + WARMUP; ++time) {
-        if(time == WARMUP)
-        {
+        if (time == WARMUP) {
             timer_computation_fused.start();
         }
         skeleton_fused.run();
-        field_fused.updateIO(0);
     }
     timer_computation_fused.stop();
+    field_fused.updateIO(0);
 
     timer_total.stop();
     double speedup = timer_computation_baseline.time() / timer_computation_fused.time();
-    if(generate_report)
-    {
+    if (generate_report) {
         // Create a report
         Neon::Report report("MapFusion_" + std::string(GRID_TYPE) + "_" + std::to_string(CARDINALITY) + "D_" + std::to_string(DEVICES.size()) + "GPUs");
 
-        //report.setToken("Token404");
+        // report.setToken("Token404");
 
         report.commandLine(ARGC, ARGV);
 
@@ -200,11 +277,10 @@ std::vector<double> mapFusionPerfTest(bool generate_report=true, int fusion_fact
 
 
 template <typename T>
-std::vector<T> log_space(T max, T min=1, T base=2)
+std::vector<T> log_space(T max, T min = 1, T base = 2)
 {
     std::vector<T> result;
-    for(T val = min; val <= max; val *= base)
-    {
+    for (T val = min; val <= max; val *= base) {
         result.push_back(val);
     }
     return result;
@@ -212,11 +288,10 @@ std::vector<T> log_space(T max, T min=1, T base=2)
 
 
 template <typename T>
-std::vector<T> lin_space(T max, T min=1, T base=1)
+std::vector<T> lin_space(T max, T min = 1, T base = 1)
 {
     std::vector<T> result;
-    for(T val = min; val <= max; val += base)
-    {
+    for (T val = min; val <= max; val += base) {
         result.push_back(val);
     }
     return result;
@@ -243,6 +318,7 @@ int main(int argc, char** argv)
          clipp::option("--fusion_factor") & clipp::integer("fusion_factor", FUSION_FACTOR) % "Number of map operations to be fused",
          clipp::option("--num_blocks") & clipp::integer("num_blocks", NUM_BLOCKS) % "Number of fused map operation blocks",
          clipp::option("--eval_scalability") & clipp::integer("eval_scalability", EVAL_SCALABILITY) % "Evaluate scalability",
+         clipp::option("--run_baseline") & clipp::integer("run_baseline", RUN_BASELINE) % "Run baseline and fused version",
          ((clipp::option("--sOCC ").set(occE, Neon::skeleton::Occ::standard) % "Standard OCC") |
           (clipp::option("--nOCC ").set(occE, Neon::skeleton::Occ::none) % "No OCC (on by default)") |
           (clipp::option("--eOCC ").set(occE, Neon::skeleton::Occ::extended) % "Extended OCC") |
@@ -277,87 +353,57 @@ int main(int argc, char** argv)
             report.addMember("skeletonOCC", Neon::skeleton::OccUtils::toString(occE));
             report.addMember("skeletonTransferMode", Neon::set::TransferModeUtils::toString(transferE));
             std::vector<int> domain_sizes = log_space<int>(DOMAIN_SIZE, 32), gpu_counts = lin_space<int>(DEVICES.size());
-            int max_num_blocks = NUM_BLOCKS;
-            auto all_devices = DEVICES;
+            int              max_num_blocks = NUM_BLOCKS;
+            auto             all_devices = DEVICES;
+            std::vector<int> devices;
 
 
             std::vector<int> fusion_factors = log_space<int>(FUSION_FACTOR);
-            NUM_BLOCKS = max_num_blocks / FUSION_FACTOR;
-            for(int domain_size : domain_sizes)
-            {
-                DOMAIN_SIZE = domain_size;
-                DEVICES.clear();
-                std::vector<double> speedups_gpu_count, baseline_times, fused_times;
-                for(int gpu_count : gpu_counts)
-                {
-                    DEVICES.push_back(all_devices[gpu_count - 1]);
-                    std::cout << "Starting GPU Count " << gpu_count << std::endl;
-                    NUM_BLOCKS = max_num_blocks / FUSION_FACTOR;
-                    std::vector<double> experiment_results;
-                    if (DATA_TYPE == "single") {
-                        experiment_results = mapFusionPerfTest<float>(false);
-                    } else if (DATA_TYPE == "double") {
-                        experiment_results = mapFusionPerfTest<double>(false);
-                    } else {
-                        return -1;
+            std::vector<int> flop_cnts = log_space<int>(8);
+            std::vector<int> mem_acess_cnts = {1};
+            devices.clear();
+            for (int gpu_count : gpu_counts) {
+                devices.push_back(all_devices[gpu_count - 1]);
+                for (int fusion_factor : fusion_factors) {
+                    for (int flop_cnt : flop_cnts) {
+                        for (int mem_access_cnt : mem_acess_cnts) {
+                            std::vector<double> experiment_results;
+                            for (int domain_size : domain_sizes) {
+                                if (DATA_TYPE == "single") {
+                                    experiment_results = mapFusionPerfTest<float>(false, devices = devices, domain_size = domain_size, fusion_factor = fusion_factor, flop_cnt = flop_cnt, mem_access_cnt = mem_access_cnt, max_num_blocks = max_num_blocks);
+                                } else if (DATA_TYPE == "double") {
+                                    experiment_results = mapFusionPerfTest<double>(false, devices = devices, domain_size = domain_size, fusion_factor = fusion_factor, flop_cnt = flop_cnt, mem_access_cnt = mem_access_cnt, max_num_blocks = max_num_blocks);
+                                } else {
+                                    return -1;
+                                }
+                                report.addMember("GPUCount:" + std::to_string(gpu_count) +
+                                                     "_MemoryAccessCount:" + std::to_string(mem_access_cnt) +
+                                                     "_FlopCount:" + std::to_string(flop_cnt) +
+                                                     "_FusionFactor:" + std::to_string(fusion_factor) +
+                                                     "_DomainSize:" + std::to_string(domain_size),
+                                                 experiment_results);
+                            }
+                        }
                     }
-                    speedups_gpu_count.push_back(experiment_results[SPEEDUP]);
-                    baseline_times.push_back(experiment_results[BASELINE]);
-                    fused_times.push_back(experiment_results[FUSED]);
                 }
-                report.addMember("GPUCount_" + std::to_string(DOMAIN_SIZE), gpu_counts);
-                report.addMember("SpeedupsGPUCount_" + std::to_string(DOMAIN_SIZE), speedups_gpu_count);
-                report.addMember("FusedTime_" + std::to_string(DOMAIN_SIZE), fused_times);
-                report.addMember("BaselineTimes_" + std::to_string(DOMAIN_SIZE), baseline_times);
-            }
-
-            DEVICES.clear();
-            DEVICES.push_back(all_devices[0]);
-
-            for(int domain_size : domain_sizes)
-            {
-                DOMAIN_SIZE = domain_size;
-                std::vector<double> speedups_fusion_factor, baseline_times, fused_times;
-                std::vector<int> fusion_factors = log_space<int>(FUSION_FACTOR);
-                for(int fusion_factor : fusion_factors)
-                {
-                    std::cout << "Starting Fusion Factor " << fusion_factor << std::endl;
-                    FUSION_FACTOR = fusion_factor;
-                    NUM_BLOCKS = max_num_blocks / FUSION_FACTOR;
-                    std::vector<double> experiment_results;
-                    if (DATA_TYPE == "single") {
-                        experiment_results = mapFusionPerfTest<float>(false);
-                    } else if (DATA_TYPE == "double") {
-                        experiment_results = mapFusionPerfTest<double>(false);
-                    } else {
-                        return -1;
-                    }
-                    speedups_fusion_factor.push_back(experiment_results[SPEEDUP]);
-                    baseline_times.push_back(experiment_results[BASELINE]);
-                    fused_times.push_back(experiment_results[FUSED]);
-                }
-                // Create a report
-
-                report.addMember("FusionFactors_" + std::to_string(DOMAIN_SIZE), fusion_factors);
-                report.addMember("SpeedupsFusionFactor_" + std::to_string(DOMAIN_SIZE), speedups_fusion_factor);
-                report.addMember("FusedTime_" + std::to_string(DOMAIN_SIZE), fused_times);
-                report.addMember("BaselineTimes_" + std::to_string(DOMAIN_SIZE), baseline_times);
-
                 std::stringstream stringstream;
                 stringstream << "Saving report file here: " << REPORT_FILENAME << std::endl;
                 NEON_INFO(stringstream.str());
             }
+
             report.write(REPORT_FILENAME);
-        }
-        else
-        {
+        } else {
+            std::vector<double> experiment_results;
             if (DATA_TYPE == "single") {
-                mapFusionPerfTest<float>();
+                experiment_results = mapFusionPerfTest<float>(false, DEVICES, DOMAIN_SIZE, FUSION_FACTOR, 1, 1, NUM_BLOCKS, RUN_BASELINE);
             } else if (DATA_TYPE == "double") {
-                mapFusionPerfTest<double>();
+                experiment_results = mapFusionPerfTest<double>(false, DEVICES, DOMAIN_SIZE, FUSION_FACTOR, 1, 1, NUM_BLOCKS, RUN_BASELINE);
             } else {
                 return -1;
             }
+            std::cout << "Speedup: " << experiment_results[0] << std::endl;
+            std::cout << "Baseline Time: " << experiment_results[1] << std::endl;
+            std::cout << "Fused Time: " << experiment_results[2] << std::endl;
         }
     }
     return 0;

@@ -31,7 +31,7 @@ def instantiate_function(keyword_list):
 
 
 NO_DUPLICATE = "NO_DUPLICATE"
-EXTERN = False
+EXTERN = True
 
 
 if __name__ == "__main__":
@@ -45,7 +45,7 @@ if __name__ == "__main__":
                             ", ",
                             [1, 2, 4, 8, 16, 32, 64], #Fusion Factor
                             ", ",
-                            [1], #Flop Count
+                            [1, 2, 4, 8], #Flop Count
                             ", ",
                             [1], #Memory Accesses
                             ">(Neon::domain::",
@@ -67,7 +67,7 @@ if __name__ == "__main__":
                                       ", 0>, ",
                                       [NO_DUPLICATE, "double", "float"],
                                       ", ",
-                                      [1], #Flop Count
+                                      [1, 2, 4, 8], #Flop Count
                                       ", ",
                                       [1], #Memory Accesses
                                       ">(Neon::domain::",
