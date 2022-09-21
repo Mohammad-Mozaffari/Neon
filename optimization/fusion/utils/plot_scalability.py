@@ -101,9 +101,9 @@ if __name__ == "__main__":
         plt.figure()
         legends = []
         default_indices = [0, 1, 2]
-        baseline_time = np.array(generate_vector(data, "FusionFactor:", [1], default_vals, "baseline_time"))
         for domain_size in domain_sizes:
             default_vals[4] = ("DomainSize:", domain_size)
+            baseline_time = np.array(generate_vector(data, "FusionFactor:", [1], default_vals, "baseline_time"))
             fused_times = np.array(generate_vector(data, "FusionFactor:", fusion_factors, default_vals))
             speedups = baseline_time / fused_times
             plt.plot(fusion_factors, speedups)
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
         plt.figure()
         default_vals[0] = ("GPUCount:", 1)
-        default_vals[3] = ("FusionFactor:", 1)
+        default_vals[3] = ("FusionFactor:", 32)
         legends = []
         print(baseline_time)
         default_indices = [0, 1, 3] 
