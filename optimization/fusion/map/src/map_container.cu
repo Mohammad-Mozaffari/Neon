@@ -55,11 +55,13 @@ auto mapContainerFused(FieldT&  pixels,
             auto& px = L.load(pixels);
             return [=] NEON_CUDA_HOST_DEVICE(
                        const typename FieldT::Cell& idx) mutable {
+                T tmp = px(idx, 0);
                 #pragma unroll
                 for(int i = 0; i < fusion_factor; i++)
                 {
-                    px(idx, 0) = map_function<T, flop_cnt, mem_access_cnt>(px(idx, 0), other_vals_device);
+                    tmp = map_function<T, flop_cnt, mem_access_cnt>(tmp, other_vals_device);
                 }
+                px(idx, 0) = tmp;
             };
         });
 }
