@@ -140,6 +140,9 @@ std::vector<double> mapFusionPerfTest(bool generate_report = true, std::vector<i
     int num_blocks = MAX(max_num_blocks / fusion_factor / MAX(flop_cnt, mem_access_cnt), 1);
 
 
+    std::cout << "Starting Domain Size: " << domain_size << ", Fusin Factor: " << fusion_factor << ", Flop Count: " << flop_cnt << ", Memory Access Count: " << mem_access_cnt << ", Number of Blocks: " << num_blocks << std::endl;
+
+
     if (devices.empty()) {
         devices.push_back(0);
     }
@@ -213,8 +216,6 @@ std::vector<double> mapFusionPerfTest(bool generate_report = true, std::vector<i
                            "_FlopCount:" + std::to_string(flop_cnt) +
                            "_FusionFactor:" + std::to_string(fusion_factor) +
                            "_DomainSize:" + std::to_string(domain_size));
-
-    std::cout << "TEST_BASELINE" << test_baseline << std::endl;
     
 
     for (time = 0; time < TIMES + WARMUP; ++time) {
