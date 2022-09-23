@@ -96,6 +96,18 @@ template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 6
 template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 64, 2, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 64, 4, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 64, 8, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 128, 1, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 128, 2, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 128, 4, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 128, 8, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 256, 1, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 256, 2, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 256, 4, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 256, 8, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 512, 1, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 512, 2, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 512, 4, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<double, 0>, double, 512, 8, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 1, 1, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 1, 2, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 1, 4, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
@@ -124,6 +136,18 @@ template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 64,
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 64, 2, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 64, 4, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
 template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 64, 8, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 128, 1, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 128, 2, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 128, 4, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 128, 8, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 256, 1, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 256, 2, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 256, 4, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 256, 8, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 512, 1, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 512, 2, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 512, 4, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
+template auto mapContainerFused<Neon::domain::dGrid::Field<float, 0>, float, 512, 8, 1>(Neon::domain::dGrid::Field<float, 0>& pixels, float other_vals[]) -> Neon::set::Container;
 
 
 template auto mapContainer<Neon::domain::dGrid::Field<double, 0>, double, 1, 1>(Neon::domain::dGrid::Field<double, 0>& pixels, double other_vals[]) -> Neon::set::Container;

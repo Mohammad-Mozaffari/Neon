@@ -1,5 +1,5 @@
 if __name__ == "__main__":
-    fusion_factors = [1, 2, 4, 8, 16, 32, 64]
+    fusion_factors = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
     flop_cnts = [1, 2, 4, 8]
     mem_access_cnts = [1]
 

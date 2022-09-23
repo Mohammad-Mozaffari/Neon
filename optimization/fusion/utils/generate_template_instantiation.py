@@ -31,11 +31,14 @@ def instantiate_function(keyword_list):
 
 
 NO_DUPLICATE = "NO_DUPLICATE"
-EXTERN = True
+EXTERN = False
 
 
 if __name__ == "__main__":
     print("Fused Version")
+    fusion_factors = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+    flop_cnts = [1, 2, 4, 8]
+    mem_access_cnts = [1]
     templates = instantiate_function(["{}template auto mapContainerFused<Neon::domain::".format("extern " if EXTERN else ""),
                             [NO_DUPLICATE, "dGrid"],
                             "::Field<",
@@ -43,11 +46,11 @@ if __name__ == "__main__":
                              ", 0>, ",
                             [NO_DUPLICATE, "double", "float"],
                             ", ",
-                            [1, 2, 4, 8, 16, 32, 64], #Fusion Factor
+                            fusion_factors, #Fusion Factor
                             ", ",
-                            [1, 2, 4, 8], #Flop Count
+                            flop_cnts, #Flop Count
                             ", ",
-                            [1], #Memory Accesses
+                            mem_access_cnts, #Memory Accesses
                             ">(Neon::domain::",
                            ["dGrid"],
                            "::Field<",
@@ -67,9 +70,9 @@ if __name__ == "__main__":
                                       ", 0>, ",
                                       [NO_DUPLICATE, "double", "float"],
                                       ", ",
-                                      [1, 2, 4, 8], #Flop Count
+                                      flop_cnts, #Flop Count
                                       ", ",
-                                      [1], #Memory Accesses
+                                      mem_access_cnts, #Memory Accesses
                                       ">(Neon::domain::",
                                       ["dGrid"],
                                       "::Field<",
