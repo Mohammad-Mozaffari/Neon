@@ -137,7 +137,7 @@ std::vector<double> mapFusionPerfTest(bool generate_report = true, std::vector<i
     assert(GRID_TYPE == "dGrid" || GRID_TYPE == "eGrid" || GRID_TYPE == "bGrid");
     assert(DATA_TYPE == "double" || DATA_TYPE == "single");
 
-    int num_blocks = max_num_blocks / fusion_factor / MAX(flop_cnt, mem_access_cnt);
+    int num_blocks = MAX(max_num_blocks / fusion_factor / MAX(flop_cnt, mem_access_cnt), 1);
 
 
     if (devices.empty()) {

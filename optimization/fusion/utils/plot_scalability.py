@@ -94,7 +94,7 @@ if __name__ == "__main__":
         gpu_counts = [1, 2, 3, 4]
         memory_access_cnts = [1]
         flop_cnts = [1, 2, 4, 8]
-        fusion_factors = [1, 2, 4, 8, 16, 32, 64]
+        fusion_factors = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         domain_sizes = [32, 64, 128, 256]
         default_vals = [("GPUCount:", 1), ("MemoryAccessCount:", 1), ("FlopCount:", 1), ("FusionFactor:", 32), ("DomainSize:", 128)]
         
