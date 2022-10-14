@@ -85,9 +85,11 @@ int poissonPerfTestScalability()
                 std::tie(result, status) = testPoissonContainers<eGrid, T, 1>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
             } else if (GRID_TYPE == "dGrid") {
                 std::tie(result, status) = testPoissonContainers<dGrid, T, 1>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
-            } else if (GRID_TYPE == "bGrid") {
-                std::tie(result, status) = testPoissonContainers<bGrid, T, 1>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
-            }
+            } 
+            // bGrid does not support swap
+            // else if (GRID_TYPE == "bGrid") {
+            //     std::tie(result, status) = testPoissonContainers<bGrid, T, 1>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
+            // }
         } else if (CARDINALITY == 3) {
             std::array<T, 3> bdZMin{0, ZMIN, 0};
             std::array<T, 3> bdZMax{0, 0, ZMAX};
@@ -95,9 +97,11 @@ int poissonPerfTestScalability()
                 std::tie(result, status) = testPoissonContainers<eGrid, T, 3>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
             } else if (GRID_TYPE == "dGrid") {
                 std::tie(result, status) = testPoissonContainers<dGrid, T, 3>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
-            } else if (GRID_TYPE == "bGrid") {
-                std::tie(result, status) = testPoissonContainers<bGrid, T, 3>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
-            }
+            } 
+            // bGrid does not support swap
+            // else if (GRID_TYPE == "bGrid") {
+            //     std::tie(result, status) = testPoissonContainers<bGrid, T, 3>(backend, "CG", DOMAIN_SIZE, bdZMin, bdZMax, MAX_ITER, static_cast<T>(TOL), occE, transferE);
+            // }
         }
 
         // Store results

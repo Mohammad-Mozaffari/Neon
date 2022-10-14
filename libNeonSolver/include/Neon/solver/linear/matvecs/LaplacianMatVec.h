@@ -66,5 +66,33 @@ extern template class LaplacianMatVec<Neon::domain::dGrid, float>;
 extern template class LaplacianMatVec<Neon::domain::bGrid, double>;
 extern template class LaplacianMatVec<Neon::domain::bGrid, float>;
 
+
+template <typename Grid_, typename Real>
+class FusedLaplacianMatVec : public LaplacianMatVec<Grid_, Real>
+{
+    public:
+    using self_t = FusedLaplacianMatVec<Grid_, Real>;
+    using Grid = Grid_;
+    using Field = typename Grid::template Field<Real>;
+    using bdField = typename Grid::template Field<int8_t>;
+
+    FusedLaplacianMatVec(Real h)
+        : LaplacianMatVec<Grid, Real>(h)
+    {
+    }   
+
+    Neon::set::Container fusedMatVec(const Field& input1, const Field& input2, const Real& delta_new, const Real& delta_old, const bdField& bd, Field& output1, Field& output2);
+
+};
+
+// Extern template instantiations
+extern template class FusedLaplacianMatVec<Neon::domain::internal::eGrid::eGrid, double>;
+extern template class FusedLaplacianMatVec<Neon::domain::internal::eGrid::eGrid, float>;
+extern template class FusedLaplacianMatVec<Neon::domain::dGrid, double>;
+extern template class FusedLaplacianMatVec<Neon::domain::dGrid, float>;
+extern template class FusedLaplacianMatVec<Neon::domain::bGrid, double>;
+extern template class FusedLaplacianMatVec<Neon::domain::bGrid, float>;
+
+
 }  //namespace solver
 }  // namespace Neon

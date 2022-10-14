@@ -5,9 +5,14 @@
 #include "Neon/domain/eGrid.h"
 #include "Neon/set/GpuStreamSet.h"
 #include "Neon/solver/linear/IterativeLinearSolver.h"
+#include "Neon/solver/linear/matvecs/LaplacianMatVec.h"
 
 namespace Neon {
 namespace solver {
+
+#define BASELINE 0
+#define MAP_STENCIL 1
+#define MAP_STENCIL_DOT 2
 
 /**
  * Conjugate Gradient solver for symmetric, positive-definite problems of the form Ax = b.
@@ -27,6 +32,8 @@ class CG_t : public IterativeLinearSolver_t<Grid_ta, Real_ta>
 
    protected:
     Field m_p, m_s, m_r; /**< Extra fields and memory needed for the CG_t*/
+    // TODO: Make a pointer for m_p_new
+    Field m_p_new;
 
    public:
     /**
@@ -73,7 +80,7 @@ class CG_t : public IterativeLinearSolver_t<Grid_ta, Real_ta>
           NEON_IN BdField&               bd /*!     Dirichlet boundary conditions in the domain (1: on boundary, 0: interior) */,
           const SolverParams&            params /*! Parameters for the solve                                                  */,
           SolverResultInfo&              result /*! Resulting information from the solve                                      */,
-          const Neon::skeleton::Options& opt = Neon::skeleton::Options(Neon::skeleton::Occ::standard, Neon::set::TransferMode::get)) override;
+          const Neon::skeleton::Options& opt = Neon::skeleton::Options(Neon::skeleton::Occ::standard, Neon::set::TransferMode::get));
 
     /*
      * Reset the data structure used by the solver such that it can be

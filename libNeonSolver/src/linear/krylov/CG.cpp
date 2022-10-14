@@ -11,12 +11,21 @@
 namespace Neon {
 namespace solver {
 
+#define fusion MAP_STENCIL
+#define PRINT_INFO 0
+
 template <typename Grid_ta, typename Real_ta>
 void CG_t<Grid_ta, Real_ta>::doInit(Field& x)
 {
     // Get the cardinality of x for creating internal fields
     const int cardinality = x.getPartition(Neon::DeviceType::CPU, 0, Neon::DataView::STANDARD).cardinality();
 
+    if(PRINT_INFO)
+        std::cout << "Initializing..." << std::endl;
+    if(fusion == MAP_STENCIL)
+    {
+        m_p_new = x.getGrid().template newField<Real_ta>("p_new", cardinality, Real_ta(0.), Neon::DataUse::COMPUTE);
+    }
     m_p = x.getGrid().template newField<Real_ta>("p", cardinality, Real_ta(0.), Neon::DataUse::COMPUTE);
     m_s = x.getGrid().template newField<Real_ta>("s", cardinality, Real_ta(0.), Neon::DataUse::COMPUTE);
     m_r = x.getGrid().template newField<Real_ta>("r", cardinality, Real_ta(0.), Neon::DataUse::COMPUTE);
@@ -58,7 +67,7 @@ SolverStatus CG_t<Grid_ta, Real_ta>::solve(std::shared_ptr<matVec_t>        A,
                                            BdField&                         bd,
                                            const SolverParams&              params,
                                            SolverResultInfo&                result,
-                                           const Neon::skeleton::Options& opt)
+                                           const Neon::skeleton::Options&   opt)
 {
     // Make sure one time initializations have been done by the user by calling init()
     if (!this->isInit()) {
@@ -101,7 +110,7 @@ SolverStatus CG_t<Grid_ta, Real_ta>::solve(std::shared_ptr<matVec_t>        A,
     delta_new() = delta_init;
 
     // beta := delta_new/delta_old (computed on the fly inside updateP container)
-    // p := r + beta*s (updateP container)
+    // p := r + beta*p (updateP container)
     // s := Ap (matVec container)
     // pAp := <p,s> (dot container)
     // alpha := delta_new/pAp (computed on the fly inside updateXandR container)
@@ -109,12 +118,40 @@ SolverStatus CG_t<Grid_ta, Real_ta>::solve(std::shared_ptr<matVec_t>        A,
     // r := r - alpha*S (updateXandR container)
     // delta_old := delta_new (done inside updateXandR container)
     // delta_new := <r,r> (dot container)
-    cgIter.sequence({updateP<Grid_ta, Real_ta>(m_p, m_r, delta_new(), delta_old()),
+
+    // p2 := r + beta * p1
+    // s := A (r + beta * p1)
+    // 3k elements -> 1k p, 1k s1, 1k s2 -- 1.5k p, 1.5 s
+    // swap(s1, s2)
+    // pAp := <p, s2> -> o := elementwise_mult(p, s2); pAp = sum(o) := <o, 1>
+
+    if(PRINT_INFO)
+        std::cout << "Creating main skeleton..." << std::endl;
+    if(fusion == BASELINE)
+    {
+        cgIter.sequence({updateP<Grid_ta, Real_ta>(m_p, m_r, delta_new(), delta_old()),
                      A->matVec(m_p, bd, m_s),
                      m_p.getGrid().dot("pAp", m_p, m_s, pAp),
                      updateXandR<Grid_ta, Real_ta>(x, m_r, m_p, m_s, delta_new(), pAp(), delta_old()),
                      m_r.getGrid().dot("rTr", m_r, m_r, delta_new)},
                     result.solverName, opt);
+    } 
+    else if (fusion == MAP_STENCIL)
+    {
+        if(PRINT_INFO)
+            std::cout << "Casting MatMul..." << std::endl;
+        auto A_fused = std::dynamic_pointer_cast<FusedLaplacianMatVec<Grid_ta, Real_ta>>(A);
+        if(PRINT_INFO)
+            std::cout << "Casting Complete!" << std::endl;
+        cgIter.sequence({A_fused->fusedMatVec(m_r, m_p, delta_new(), delta_old(), bd, m_p_new, m_s),
+                     m_p.getGrid().dot("pAp", m_p_new, m_s, pAp),
+                     updateXandR<Grid_ta, Real_ta>(x, m_r, m_p, m_s, delta_new(), pAp(), delta_old()),
+                     m_r.getGrid().dot("rTr", m_r, m_r, delta_new)},
+                    result.solverName, opt);
+    }
+
+    if(PRINT_INFO)
+        std::cout << "Main skeleton created!" << std::endl;
     delta_old() = 0;
 
     // Save the multi-GPU graph
@@ -135,6 +172,18 @@ SolverStatus CG_t<Grid_ta, Real_ta>::solve(std::shared_ptr<matVec_t>        A,
         }
 
         cgIter.run();
+
+        if(PRINT_INFO)
+            std::cout << "RUN COMPLETE!" << std::endl;
+
+        if(fusion == MAP_STENCIL)
+        {
+            // bGrid doesn't support swap
+            m_p.swap(m_p, m_p_new);
+        }
+
+        if(PRINT_INFO)
+            std::cout << "SWAP COMPLETE!" << std::endl;
 
         result.residualEnd = std::sqrt(delta_new());
 
@@ -163,10 +212,24 @@ void CG_t<Grid_ta, Real_ta>::reset()
 
     Neon::skeleton::Skeleton skeleton(bk);
 
-    skeleton.sequence({set<Grid_ta, Real_ta>(m_r, Real_ta(0.0)),
+    if(PRINT_INFO)
+        std::cout << "Resetting..." << std::endl;
+
+    if(fusion == MAP_STENCIL)
+    {
+        skeleton.sequence({set<Grid_ta, Real_ta>(m_r, Real_ta(0.0)),
+                       set<Grid_ta, Real_ta>(m_p, Real_ta(0.0)),
+                       set<Grid_ta, Real_ta>(m_p_new, Real_ta(0.0)),
+                       set<Grid_ta, Real_ta>(m_s, Real_ta(0.0))},
+                      "CG::Reset");
+    }
+    else
+    {
+        skeleton.sequence({set<Grid_ta, Real_ta>(m_r, Real_ta(0.0)),
                        set<Grid_ta, Real_ta>(m_p, Real_ta(0.0)),
                        set<Grid_ta, Real_ta>(m_s, Real_ta(0.0))},
                       "CG::Reset");
+    }
     skeleton.run();
     bk.sync();
 }
@@ -176,8 +239,9 @@ template class CG_t<Neon::domain::eGrid, double>;
 template class CG_t<Neon::domain::eGrid, float>;
 template class CG_t<Neon::domain::dGrid, double>;
 template class CG_t<Neon::domain::dGrid, float>;
-template class CG_t<Neon::domain::bGrid, double>;
-template class CG_t<Neon::domain::bGrid, float>;
+// bGrid doesn't support swap
+// template class CG_t<Neon::domain::bGrid, double>;
+// template class CG_t<Neon::domain::bGrid, float>;
 
 }  // namespace solver
 }  // namespace Neon

@@ -107,9 +107,10 @@ inline Neon::domain::internal::eGrid::eGrid createGrid<Neon::domain::internal::e
 template <>
 inline Neon::domain::dGrid createGrid<Neon::domain::dGrid>(const Neon::Backend& backend, int domainSize);
 
+// bGrid does not support swap
 // Specialization for bGrid_t
-template <>
-inline Neon::domain::bGrid createGrid<Neon::domain::bGrid>(const Neon::Backend& backend, int domainSize);
+// template <>
+// inline Neon::domain::bGrid createGrid<Neon::domain::bGrid>(const Neon::Backend& backend, int domainSize);
 
 /**
  * Solve the poisson problem
@@ -152,7 +153,7 @@ auto testPoissonContainers(const Neon::Backend&           backend,
     setupPoissonProblem<Grid, Real, Cardinality>(grid, u, rhs, bd, bdZmin, bdZmax);
 
     // Laplacian matvec operation
-    auto L = std::make_shared<Neon::solver::LaplacianMatVec<Grid, Real>>(Real(1.0));
+    auto L = std::make_shared<Neon::solver::FusedLaplacianMatVec<Grid, Real>>(Real(1.0));
 
     // Create solver and solve problem
     auto solverBase = createSolver<Grid, Real>(solverName);
@@ -199,15 +200,17 @@ auto testPoissonContainers(const Neon::Backend&           backend,
 
 EXTERN_TEMPLATE_INST(Neon::domain::dGrid, double, 1)
 EXTERN_TEMPLATE_INST(Neon::domain::dGrid, double, 3)
-EXTERN_TEMPLATE_INST(Neon::domain::bGrid, double, 1)
-EXTERN_TEMPLATE_INST(Neon::domain::bGrid, double, 3)
+// bGrid does not support swap
+// EXTERN_TEMPLATE_INST(Neon::domain::bGrid, double, 1)
+// EXTERN_TEMPLATE_INST(Neon::domain::bGrid, double, 3)
 EXTERN_TEMPLATE_INST(Neon::domain::eGrid, double, 1)
 EXTERN_TEMPLATE_INST(Neon::domain::eGrid, double, 3)
 
 EXTERN_TEMPLATE_INST(Neon::domain::dGrid, float, 1)
 EXTERN_TEMPLATE_INST(Neon::domain::dGrid, float, 3)
-EXTERN_TEMPLATE_INST(Neon::domain::bGrid, float, 1)
-EXTERN_TEMPLATE_INST(Neon::domain::bGrid, float, 3)
+// bGrid does not support swap
+// EXTERN_TEMPLATE_INST(Neon::domain::bGrid, float, 1)
+// EXTERN_TEMPLATE_INST(Neon::domain::bGrid, float, 3)
 EXTERN_TEMPLATE_INST(Neon::domain::eGrid, float, 1)
 EXTERN_TEMPLATE_INST(Neon::domain::eGrid, float, 3)
 
