@@ -19,7 +19,11 @@ The pseudocode of the main body of the conjugate gradient (CG) algorithm is as f
 
     9- delta_new := <r,r> (dot container)
 
-We aim to fuse different parts of this algorithm, and during this process, use the following table to count the number of flops.
+We aim to fuse different parts of this algorithm, and during this process, the following assumptions are made for counting the number of flops:
+* Fused Multiplication and Add: 1 Flop
+* Floating Point Multiplication: 1 Flop
+* Floating Point Addition: 1 Flop
+
 
 ## Map-Stencil Fusion:
 Steps 2 (map) and 3 (stencil) steps in the CG algorithm can be fused. The number of memory reads, writes, halo updates, and flops of each step is discussed below. In the analysis we assume that we have and $(n, n, n)$ grid, and we have $g$ GPUs.
@@ -83,7 +87,7 @@ The psuedocode for the fused version is as follows:
 * The boundary GPUs will have $2 n^2$ elements.
 
 
-Asuming  $m = n^3 $ and $b = n^2$ the following table compares the baseline and the fused version.
+Asuming $m = n^3$ and $b = n^2$ the following table compares the baseline and the fused version.
 
 
 <table class="tg">
@@ -115,7 +119,7 @@ Asuming  $m = n^3 $ and $b = n^2$ the following table compares the baseline and 
     <td class="tg-0lax">2m</td>
     <td class="tg-0lax">14m</td>
     <td class="tg-0lax">4b</td>
-    <td class="tg-0lax">5</td>
+    <td class="tg-0lax">7</td>
   </tr>
 </tbody>
 </table>
