@@ -226,18 +226,37 @@ auto dGrid::dot(const std::string&               name,
                 }
                 loader.load(scalar);
                 return [&](int streamIdx, Neon::DataView dataView) mutable -> void {
-                    if (dataView != Neon::DataView::STANDARD && getBackend().devSet().setCardinality() == 1) {
-                        NeonException exc("dGrid_t");
-                        exc << "Reduction operation can only run on standard data view when the number of partitions/GPUs is 1";
-                        NEON_THROW(exc);
+                    // if (dataView != Neon::DataView::STANDARD && getBackend().devSet().setCardinality() == 1) {
+                    //     NeonException exc("dGrid_t");
+                    //     exc << "Reduction operation can only run on standard data view when the number of partitions/GPUs is 1";
+                    //     NEON_THROW(exc);
+                    // }
+                    // scalar.setStream(streamIdx, dataView);
+                    // scalar(dataView) = input1.dot(scalar.getBlasSet(dataView),
+                    //                               input2, scalar.getTempMemory(dataView), dataView);
+                    auto& bk = this->getBackend(    );
+                    // get num dev
+                    int ndev = bk.devSet().setCardinality( );
+                    // cuda mem cpy
+                    T finalVal=0;
+                    // #pragma omp parallel num_threads(ndev) reduction(+:finalVal)
+                    for(int i=0; i< ndev; i++){
+                        bk.devSet().setActiveDevContext(i);
+                        // grab pointer on device 
+                        T* dMem = scalar.getPartition(Neon::DeviceType::CUDA,i, dataView);
+                        auto cudaStream = bk.streamSet(streamIdx).cudaStream(i);
+                        T partial;
+                        cudaMemcpyAsync(&partial, dMem, sizeof(T), cudaMemcpyKind::cudaMemcpyDeviceToHost, cudaStream);
+                        cudaStreamSynchronize(cudaStream);
+                        finalVal+= partial; 
                     }
-                    scalar.setStream(streamIdx, dataView);
-                    scalar(dataView) = input1.dot(scalar.getBlasSet(dataView),
-                                                  input2, scalar.getTempMemory(dataView), dataView);
-                    if (dataView == Neon::DataView::BOUNDARY) {
-                        scalar(Neon::DataView::STANDARD) =
-                            scalar(Neon::DataView::BOUNDARY) + scalar(Neon::DataView::INTERNAL);
-                    }
+
+                    scalar(Neon::DataView::STANDARD) = finalVal;
+
+                    // if (dataView == Neon::DataView::BOUNDARY) {
+                    //     scalar(Neon::DataView::STANDARD) =
+                    //         scalar(Neon::DataView::BOUNDARY) + scalar(Neon::DataView::INTERNAL);
+                    // }
                 };
             });
     } else if (m_data->reduceEngine == Neon::sys::patterns::Engine::CUB) {

@@ -62,7 +62,7 @@ auto axpy(const Neon::template PatternScalar<T>& fR,
             auto&      xLocal = L.load(x);
             auto&      yLocal = L.load(y);
             auto       fRLocal = L.load(fR);
-            const auto fRVal = fRLocal();
+            const auto fRVal = fR();
             return [=] NEON_CUDA_HOST_DEVICE(const typename Field::Cell& e) mutable {
                 //printf("%d yLocal.cardinality()\n", yLocal.cardinality());
 

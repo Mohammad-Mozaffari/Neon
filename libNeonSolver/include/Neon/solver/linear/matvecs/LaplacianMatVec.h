@@ -81,7 +81,7 @@ class FusedLaplacianMatVec : public LaplacianMatVec<Grid_, Real>
     {
     }   
 
-    Neon::set::Container fusedMatVec(const Field& input1, const Field& input2, const Real& delta_new, const Real& delta_old, const bdField& bd, Field& output1, Field& output2);
+    Neon::set::Container fusedMatVec(const Field& input1, const Field& input2, const Real& delta_new, const Real& delta_old, const bdField& bd, Field& output1, Field& output2, Neon::template PatternScalar<Real>& scalar);
 
 };
 

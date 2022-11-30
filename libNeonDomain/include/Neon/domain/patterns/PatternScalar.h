@@ -7,11 +7,11 @@ namespace Neon {
 
 template <typename T>
 class PatternScalar
-    : public set::interface::MultiDeviceObjectInterface<PatternScalar<T>, int>
+    : public set::interface::MultiDeviceObjectInterface<T*, int>
 {
 
    public:
-    using Partition = PatternScalar<T>;
+    using Partition = T*; 
 
     PatternScalar() = default;
 
@@ -102,6 +102,9 @@ class PatternScalar
         Neon::set::patterns::BlasSet<T> blasSetStandard;
         Neon::DeviceType                devType;
         Neon::Backend                   backend;
+        Neon::set::DataSet<T*>          memInternal;
+        Neon::set::DataSet<T*>          memBoundary;
+        Neon::set::DataSet<T*>          memStandard;
     };
     std::shared_ptr<Data> mData;
 

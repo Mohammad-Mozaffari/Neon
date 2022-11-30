@@ -30,6 +30,10 @@ PatternScalar<T>::PatternScalar(Neon::Backend               backend,
         mData->deviceTempStandard = backend.devSet().template newMemDevSet<T>(Neon::DeviceType::CUDA,
                                                                               Neon::Allocator::CUDA_MEM_DEVICE, 1);
     }
+
+    mData->memInternal = mData->deviceTempInternal.memSet();
+    mData->memBoundary = mData->deviceTempBoundary.memSet();
+    mData->memStandard = mData->deviceTempStandard.memSet();
 }
 
 template <typename T>
@@ -58,21 +62,68 @@ auto PatternScalar<T>::getPartition(
     [[maybe_unused]] const Neon::SetIdx&     idx,
     [[maybe_unused]] const Neon::DataView&   dataView) const -> const Partition&
 {
-    return *this;
+    if(devType == Neon::DeviceType::CPU)
+    {
+        NEON_THROW_UNSUPPORTED_OPERATION("To be implemented");
+    }
+    else if (devType == Neon::DeviceType::CUDA)
+    {
+        switch (dataView)
+        {
+            case Neon::DataView::STANDARD:
+            {
+                return mData->memStandard[idx];
+            }
+            case Neon::DataView::BOUNDARY:
+            {
+                return mData->memBoundary[idx];
+            }
+            case Neon::DataView::INTERNAL:
+            {
+                return mData->memInternal[idx];
+            }
+        }
+    }
+    NEON_THROW_UNSUPPORTED_OPERATION("To be implemented");
+    // return *this;
 }
 
 template <typename T>
 auto PatternScalar<T>::getPartition([[maybe_unused]] const DeviceType& devType,
                                     [[maybe_unused]] const SetIdx&     idx,
-                                    [[maybe_unused]] const DataView&   dataView) -> PatternScalar::Partition&
+                                    [[maybe_unused]] const DataView&   dataView) -> Partition&
 {
-    return *this;
+    if(devType == Neon::DeviceType::CPU)
+    {
+        NEON_THROW_UNSUPPORTED_OPERATION("To be implemented");
+    }
+    else if (devType == Neon::DeviceType::CUDA)
+    {
+        switch (dataView)
+        {
+            case Neon::DataView::STANDARD:
+            {
+                return mData->memStandard[idx];
+            }
+            case Neon::DataView::BOUNDARY:
+            {
+                return mData->memBoundary[idx];
+            }
+            case Neon::DataView::INTERNAL:
+            {
+                return mData->memInternal[idx];
+            }
+
+        }
+    }
+    NEON_THROW_UNSUPPORTED_OPERATION("To be implemented");
+    // return *this;
 }
 
 template <typename T>
 auto PatternScalar<T>::getPartition([[maybe_unused]] Neon::Execution execution,
                                     [[maybe_unused]] Neon::SetIdx    setIdx,
-                                    [[maybe_unused]] const DataView& dataView) const -> const PatternScalar::Partition&
+                                    [[maybe_unused]] const DataView& dataView) const -> const Partition&
 {
     NEON_DEV_UNDER_CONSTRUCTION("");
 }
@@ -92,7 +143,7 @@ template <typename T>
 auto PatternScalar<T>::getPartition([[maybe_unused]] Neon::Execution execution,
                                     [[maybe_unused]] Neon::SetIdx    setIdx,
                                     [[maybe_unused]] const DataView& dataView)
-    -> PatternScalar::Partition&
+    -> Partition&
 {
     NEON_DEV_UNDER_CONSTRUCTION("");
 }

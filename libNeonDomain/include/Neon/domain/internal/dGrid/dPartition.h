@@ -93,13 +93,13 @@ struct dPartition
         return m_pitch;
     }
 
-    inline NEON_CUDA_HOST_DEVICE int64_t elPitch(const Cell& idx,
+    inline NEON_CUDA_HOST_DEVICE int32_t elPitch(const Cell& idx,
                                                  int         cardinalityIdx = 0) const
     {
-        return idx.get().x * int64_t(m_pitch.x) +
-               idx.get().y * int64_t(m_pitch.y) +
-               idx.get().z * int64_t(m_pitch.z) +
-               cardinalityIdx * int64_t(m_pitch.w);
+        return idx.get().x * int32_t(m_pitch.x) +
+               idx.get().y * int32_t(m_pitch.y) +
+               idx.get().z * int32_t(m_pitch.z) +
+               cardinalityIdx * int32_t(m_pitch.w);
     }
 
     inline NEON_CUDA_HOST_DEVICE auto dim() const -> const Neon::index_3d
@@ -201,7 +201,7 @@ struct dPartition
     {
         cellNgh = Cell(eId.get().x + xOff,
                        eId.get().y + yOff,
-                       eId.get().z + yOff);
+                       eId.get().z + zOff);
         Cell cellNgh_global(cellNgh.get() + m_origin);
         // const bool isValidNeighbour = (cellNgh_global >= 0 && cellNgh < (m_dim + m_halo) && cellNgh_global < m_fullGridSize);
         bool isValidNeighbour = true;
@@ -249,21 +249,21 @@ struct dPartition
     NEON_CUDA_HOST_DEVICE inline auto operator()(const Cell& cell,
                                                  int         cardinalityIdx) -> T_ta&
     {
-        int64_t p = elPitch(cell, cardinalityIdx);
+        int32_t p = elPitch(cell, cardinalityIdx);
         return m_mem[p];
     }
 
     NEON_CUDA_HOST_DEVICE inline auto operator()(const Cell& cell,
                                                  int         cardinalityIdx) const -> const T_ta&
     {
-        int64_t p = elPitch(cell, cardinalityIdx);
+        int32_t p = elPitch(cell, cardinalityIdx);
         return m_mem[p];
     }
 
     NEON_CUDA_HOST_DEVICE inline auto ePrt(const index_3d& cell,
                                            int             cardinalityIdx) -> T_ta*
     {
-        int64_t p = elPitch(cell, cardinalityIdx);
+        int32_t p = elPitch(cell, cardinalityIdx);
         return m_mem + p;
     }
 

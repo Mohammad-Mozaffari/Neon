@@ -143,7 +143,7 @@ SolverStatus CG_t<Grid_ta, Real_ta>::solve(std::shared_ptr<matVec_t>        A,
         auto A_fused = std::dynamic_pointer_cast<FusedLaplacianMatVec<Grid_ta, Real_ta>>(A);
         if(PRINT_INFO)
             std::cout << "Casting Complete!" << std::endl;
-        cgIter.sequence({A_fused->fusedMatVec(m_r, m_p, delta_new(), delta_old(), bd, m_p_new, m_s),
+        cgIter.sequence({A_fused->fusedMatVec(m_r, m_p, delta_new(), delta_old(), bd, m_p_new, m_s, pAp),
                      m_p.getGrid().dot("pAp", m_p_new, m_s, pAp),
                      updateXandR<Grid_ta, Real_ta>(x, m_r, m_p, m_s, delta_new(), pAp(), delta_old()),
                      m_r.getGrid().dot("rTr", m_r, m_r, delta_new)},
